@@ -1,0 +1,15 @@
+# Un Service da una direccion estable a un grupo de pods.
+# Los pods nacen y mueren con IPs distintas; el Service siempre esta en el mismo
+# sitio y reparte las peticiones entre las copias que esten sanas.
+apiVersion: v1
+kind: Service
+metadata:
+  name: hotel-api-service
+spec:
+  type: NodePort              # abre un puerto en la maquina para poder entrar desde el navegador
+  selector:
+    app: hotel-api            # manda trafico a los pods con esta etiqueta
+  ports:
+    - port: 80                # puerto del Service dentro del cluster
+      targetPort: 8000        # puerto donde escucha uvicorn en el contenedor
+      nodePort: 30080         # puerto externo: http://localhost:30080

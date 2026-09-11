@@ -1,0 +1,47 @@
+# Un Deployment describe QUE quieres que este corriendo.
+# Kubernetes se encarga de que siempre haya ese numero de copias vivas:
+# si un contenedor se cae, lo vuelve a levantar sin que tu hagas nada.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hotel-api
+  labels:
+    app: hotel-api
+spec:
+  replicas: 2                 # dos copias de la API a la vez
+  selector:
+    matchLabels:
+      app: hotel-api          # este Deployment gobierna los pods con esta etiqueta
+  template:                   # molde con el que se fabrica cada copia (pod)
+    metadata:
+      labels:
+        app: hotel-api
+    spec:
+      containers:
+        - name: hotel-api
+          image: mariarguezrodriguez/hotel-api:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PORT
+              value: "8000"
+          resources:          # cuanta maquina puede consumir cada copia
+            requests:         # lo que reserva siempre
+              memory: "512Mi"
+              cpu: "250m"     # 250m = 0,25 de un nucleo
+            limits:           # tope que no puede superar
+              memory: "1Gi"
+              cpu: "1000m"
+          readinessProbe:     # "¿puedo mandarle trafico ya?"
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:      # "¿sigue vivo o lo reinicio?"
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 20
