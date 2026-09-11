@@ -113,7 +113,6 @@ def _predecir_o_error(reserva: Reserva):
     return {"entrada": reserva.model_dump(), **resultado}
 
 
-# --- TERCER ENDPOINT: activado en el redespliegue ---------------------------
 @app.get("/modelo")
 def info_modelo():
     """Ficha tecnica del modelo que hay detras de la API."""
