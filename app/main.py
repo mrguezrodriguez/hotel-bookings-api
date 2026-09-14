@@ -113,15 +113,15 @@ def _predecir_o_error(reserva: Reserva):
     return {"entrada": reserva.model_dump(), **resultado}
 
 
- --- TERCER ENDPOINT -------------------
- @app.get("/modelo")
- def info_modelo():
-     """Ficha tecnica del modelo que hay detras de la API."""
-     from app.predictor import modelo, pipeline
+# --- TERCER ENDPOINT -----------------------------------------------------------
+@app.get("/modelo")
+def info_modelo():
+    """Ficha tecnica del modelo que hay detras de la API."""
+    from app.predictor import modelo, pipeline
 
-     return {
-         "algoritmo": type(modelo).__name__,
-         "n_features": modelo.n_features_in_,
-         "pasos_del_pipeline": [nombre for nombre, _ in pipeline.steps],
-         "metricas_en_test": {"roc_auc": 0.95},
-     }
+    return {
+        "algoritmo": type(modelo).__name__,
+        "n_features": int(modelo.n_features_in_),
+        "pasos_del_pipeline": [nombre for nombre, _ in pipeline.steps],
+        "metricas_en_test": {"roc_auc": 0.95},
+    }
