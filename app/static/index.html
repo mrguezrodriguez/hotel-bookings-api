@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Predicción de Cancelación Hotelera</title>
+<style>
+  :root {
+    --verde: #1e6f5c;
+    --verde-claro: #e8f3f0;
+    --gris: #6b7280;
+    --fondo: #f7f8f7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+    background: var(--fondo);
+    color: #1f2937;
+  }
+  h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  .subtitulo { color: var(--gris); margin-bottom: 24px; font-size: 0.9rem; }
+  fieldset {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    padding: 16px 20px 8px;
+    background: white;
+  }
+  legend { padding: 0 6px; font-weight: 600; color: var(--verde); font-size: 0.9rem; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+  label { display: block; font-size: 0.8rem; color: var(--gris); margin-top: 10px; margin-bottom: 4px; }
+  input, select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+  .acciones { margin: 24px 0; display: flex; gap: 12px; align-items: center; }
+  button.primario {
+    background: var(--verde);
+    color: white;
+    padding: 12px 26px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  button.primario:hover { opacity: 0.9; }
+  a.limpiar { color: var(--gris); font-size: 0.9rem; cursor: pointer; text-decoration: underline; }
+
+  #resultado {
+    display: none;
+    margin-top: 8px;
+    padding: 20px 24px;
+    border-radius: 10px;
+    background: white;
+    border-top: 4px solid var(--verde);
+  }
+  #resultado.cancela { border-top-color: #b91c1c; }
+  .etiqueta-resultado { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gris); }
+  #etiqueta { font-size: 1.3rem; font-weight: 700; margin: 4px 0 14px; display: flex; align-items: center; gap: 8px; }
+  .punto { width: 10px; height: 10px; border-radius: 50%; background: var(--verde); display: inline-block; }
+  #resultado.cancela .punto { background: #b91c1c; }
+  #confianza-texto { font-size: 1.1rem; }
+  #confianza-texto b { font-size: 1.4rem; }
+  .barra-bg { background: #e5e7eb; border-radius: 4px; height: 8px; margin: 8px 0 14px; overflow: hidden; }
+  .barra-fill { background: var(--verde); height: 8px; transition: width 0.4s ease; }
+  #resultado.cancela .barra-fill { background: #b91c1c; }
+  #mensaje { color: #374151; font-size: 0.9rem; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; background: white; border-radius: 8px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 10px; font-size: 0.85rem; border-bottom: 1px solid #f0f0f0; }
+  th { color: var(--gris); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
+  .badge { padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; }
+  .badge.cancela { background: #fee2e2; color: #b91c1c; }
+  .badge.no-cancela { background: var(--verde-claro); color: var(--verde); }
+  h2 { font-size: 1.1rem; margin-top: 32px; }
+</style>
+</head>
+<body>
+
+  <h1>Predicción de cancelación de reservas</h1>
+  <p class="subtitulo">Modelo XGBoost — introduce los datos de una reserva y comprueba la probabilidad de cancelación.</p>
+
+  <fieldset>
+    <legend>Reserva</legend>
+    <div class="grid">
+      <div>
+        <label>Hotel</label>
+        <select id="hotel">
+          <option value="City Hotel">City Hotel</option>
+          <option value="Resort Hotel">Resort Hotel</option>
+        </select>
+      </div>
+      <div>
+        <label>Lead time (días de antelación)</label>
+        <input type="number" id="lead_time" value="180">
+      </div>
+      <div>
+        <label>Año de llegada</label>
+        <input type="number" id="arrival_date_year" value="2017">
+      </div>
+      <div>
+        <label>Mes de llegada</label>
+        <select id="arrival_date_month">
+          <option>January</option><option>February</option><option>March</option>
+          <option>April</option><option>May</option><option>June</option>
+          <option>July</option><option selected>August</option><option>September</option>
+          <option>October</option><option>November</option><option>December</option>
+        </select>
+      </div>
+      <div>
+        <label>Semana del año</label>
+        <input type="number" id="arrival_date_week_number" value="34">
+      </div>
+      <div>
+        <label>Día del mes</label>
+        <input type="number" id="arrival_date_day_of_month" value="20">
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Estancia</legend>
+    <div class="grid">
+      <div>
+        <label>Noches de fin de semana</label>
+        <input type="number" id="stays_in_weekend_nights" value="2">
+      </div>
+      <div>
+        <label>Noches entre semana</label>
+        <input type="number" id="stays_in_week_nights" value="5">
+      </div>
+      <div>
+        <label>Cambios en la reserva</label>
+        <input type="number" id="booking_changes" value="0">
+      </div>
+      <div>
+        <label>Días en lista de espera</label>
+        <input type="number" id="days_in_waiting_list" value="0">
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Huéspedes</legend>
+    <div class="grid">
+      <div>
+        <label>Adultos</label>
+        <input type="number" id="adults" value="2">
+      </div>
+      <div>
+        <label>Niños</label>
+        <input type="number" id="children" value="1">
+      </div>
+      <div>
+        <label>Bebés</label>
+        <input type="number" id="babies" value="0">
+      </div>
+      <div>
+        <label>País</label>
+        <input type="text" id="country" value="ESP">
+      </div>
+      <div>
+        <label>Tipo de cliente</label>
+        <select id="customer_type">
+          <option value="Transient">Transient</option>
+          <option value="Contract">Contract</option>
+          <option value="Transient-Party">Transient-Party</option>
+          <option value="Group">Group</option>
+        </select>
+      </div>
+      <div>
+        <label>¿Huésped repetido?</label>
+        <select id="is_repeated_guest">
+          <option value="0">No</option>
+          <option value="1">Sí</option>
+        </select>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Habitación y régimen</legend>
+    <div class="grid">
+      <div>
+        <label>Régimen (meal)</label>
+        <select id="meal">
+          <option value="BB">BB — Bed & Breakfast</option>
+          <option value="HB">HB — Half Board</option>
+          <option value="FB">FB — Full Board</option>
+          <option value="SC">SC — Self Catering</option>
+          <option value="Undefined">Undefined</option>
+        </select>
+      </div>
+      <div>
+        <label>Tipo de habitación reservada</label>
+        <select id="reserved_room_type">
+          <option>A</option><option>B</option><option>C</option><option>D</option>
+          <option>E</option><option>F</option><option>G</option><option>H</option>
+        </select>
+      </div>
+      <div>
+        <label>Tipo de habitación asignada</label>
+        <select id="assigned_room_type">
+          <option>A</option><option>B</option><option>C</option><option>D</option>
+          <option>E</option><option>F</option><option>G</option><option>H</option>
+        </select>
+      </div>
+      <div>
+        <label>Plazas de parking requeridas</label>
+        <input type="number" id="required_car_parking_spaces" value="1">
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Canal, depósito y precio</legend>
+    <div class="grid">
+      <div>
+        <label>Segmento de mercado</label>
+        <select id="market_segment">
+          <option value="Online TA">Online TA</option>
+          <option value="Offline TA/TO">Offline TA/TO</option>
+          <option value="Direct">Direct</option>
+          <option value="Corporate">Corporate</option>
+          <option value="Complementary">Complementary</option>
+          <option value="Groups">Groups</option>
+          <option value="Aviation">Aviation</option>
+        </select>
+      </div>
+      <div>
+        <label>Canal de distribución</label>
+        <select id="distribution_channel">
+          <option value="TA/TO">TA/TO</option>
+          <option value="Direct">Direct</option>
+          <option value="Corporate">Corporate</option>
+          <option value="GDS">GDS</option>
+        </select>
+      </div>
+      <div>
+        <label>Tipo de depósito</label>
+        <select id="deposit_type">
+          <option value="No Deposit">No Deposit</option>
+          <option value="Non Refund">Non Refund</option>
+          <option value="Refundable">Refundable</option>
+        </select>
+      </div>
+      <div>
+        <label>Agente</label>
+        <input type="number" id="agent" value="240">
+      </div>
+      <div>
+        <label>ADR (precio medio diario)</label>
+        <input type="number" step="0.01" id="adr" value="140">
+      </div>
+      <div>
+        <label>Peticiones especiales</label>
+        <input type="number" id="total_of_special_requests" value="2">
+      </div>
+      <div>
+        <label>Cancelaciones previas</label>
+        <input type="number" id="previous_cancellations" value="0">
+      </div>
+      <div>
+        <label>Reservas previas no canceladas</label>
+        <input type="number" id="previous_bookings_not_canceled" value="0">
+      </div>
+    </div>
+  </fieldset>
+
+  <div class="acciones">
+    <button class="primario" onclick="predecir()">Predecir</button>
+    <a class="limpiar" onclick="location.reload()">Limpiar formulario</a>
+  </div>
+
+  <div id="resultado">
+    <div class="etiqueta-resultado">Resultado del modelo</div>
+    <div id="etiqueta"><span class="punto"></span><span id="etiqueta-texto"></span></div>
+    <div id="confianza-texto"><b id="confianza-num"></b> de confianza</div>
+    <div class="barra-bg"><div class="barra-fill" id="barra"></div></div>
+    <div id="mensaje"></div>
+  </div>
+
+  <h2>Historial de sesión</h2>
+  <table>
+    <thead>
+      <tr><th>Hora</th><th>Perfil</th><th>Predicción</th><th>Confianza</th></tr>
+    </thead>
+    <tbody id="historial"></tbody>
+  </table>
+
+<script>
+async function predecir() {
+  const val = (id) => document.getElementById(id).value;
+  const num = (id) => Number(document.getElementById(id).value);
+
+  const reserva = {
+    hotel: val('hotel'),
+    lead_time: num('lead_time'),
+    arrival_date_year: num('arrival_date_year'),
+    arrival_date_month: val('arrival_date_month'),
+    arrival_date_week_number: num('arrival_date_week_number'),
+    arrival_date_day_of_month: num('arrival_date_day_of_month'),
+    stays_in_weekend_nights: num('stays_in_weekend_nights'),
+    stays_in_week_nights: num('stays_in_week_nights'),
+    adults: num('adults'),
+    children: num('children'),
+    babies: num('babies'),
+    meal: val('meal'),
+    country: val('country'),
+    market_segment: val('market_segment'),
+    distribution_channel: val('distribution_channel'),
+    is_repeated_guest: num('is_repeated_guest'),
+    previous_cancellations: num('previous_cancellations'),
+    previous_bookings_not_canceled: num('previous_bookings_not_canceled'),
+    reserved_room_type: val('reserved_room_type'),
+    assigned_room_type: val('assigned_room_type'),
+    booking_changes: num('booking_changes'),
+    deposit_type: val('deposit_type'),
+    agent: num('agent'),
+    days_in_waiting_list: num('days_in_waiting_list'),
+    customer_type: val('customer_type'),
+    adr: num('adr'),
+    required_car_parking_spaces: num('required_car_parking_spaces'),
+    total_of_special_requests: num('total_of_special_requests'),
+  };
+
+  let data;
+  try {
+    const res = await fetch('/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reserva)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    data = await res.json();
+  } catch (err) {
+    alert('Error al llamar a /predict: ' + err.message);
+    return;
+  }
+
+  const cancela = data.prediccion === 1;
+  const prob = cancela ? data.probabilidad_cancelacion : data.probabilidad_no_cancelacion;
+
+  const caja = document.getElementById('resultado');
+  caja.style.display = 'block';
+  caja.className = cancela ? 'cancela' : '';
+  document.getElementById('etiqueta-texto').textContent = data.etiqueta;
+  document.getElementById('confianza-num').textContent = (prob * 100).toFixed(1) + '%';
+  document.getElementById('barra').style.width = (prob * 100).toFixed(1) + '%';
+  document.getElementById('mensaje').textContent = cancela
+    ? 'El perfil muestra señales de riesgo: es probable que la reserva se cancele. Priorice el seguimiento o la política de overbooking.'
+    : 'El perfil muestra señales favorables: es probable que la reserva se mantenga.';
+
+  const fila = document.createElement('tr');
+  const badgeClass = cancela ? 'badge cancela' : 'badge no-cancela';
+  fila.innerHTML = `
+    <td>${new Date().toLocaleTimeString()}</td>
+    <td>${reserva.hotel} · ${reserva.customer_type} · ${reserva.country}</td>
+    <td><span class="${badgeClass}">${cancela ? 'Cancela' : 'No cancela'}</span></td>
+    <td>${(prob * 100).toFixed(1)}%</td>
+  `;
+  document.getElementById('historial').prepend(fila);
+}
+</script>
+</body>
+</html>
