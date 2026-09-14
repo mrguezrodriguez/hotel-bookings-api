@@ -1,20 +1,22 @@
+"""
+API de prediccion de cancelaciones de reservas de hotel.
+
+Arranque en local:
+    uvicorn app.main:app --reload
+"""
+
 from typing import Literal
 
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
-from pathlib import Path
 
 from app.predictor import predecir
 
 app = FastAPI(
-    title="Hotel Bookings – Prediccion de cancelaciones",
+    title="Hotel Bookings - Prediccion de cancelaciones",
     description="Modelo XGBoost que estima la probabilidad de que una reserva se cancele.",
     version="1.0.0",
 )
-
-BASE_DIR = Path(__file__).resolve().parent
-app.mount("/app", StaticFiles(directory=BASE_DIR / "static", html=True), name="frontend")
 
 
 class Reserva(BaseModel):
