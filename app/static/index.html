@@ -165,6 +165,9 @@
   .recomendacion.estable{border-left-color:var(--salvia)}
 
   .acciones{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px}
+  .presets{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .presets span{font-size:.8rem;color:var(--tinta-2);font-weight:600}
+  .presets .btn{padding:7px 14px;font-size:.8rem;font-weight:600}
   .btn{border:0;border-radius:999px;padding:12px 22px;font-weight:700;font-size:.9rem;cursor:pointer;transition:transform .1s,background .2s}
   .btn:active{transform:scale(.98)}
   .btn.principal{background:var(--noche);color:#fff}
@@ -294,8 +297,8 @@
         <h2>¿Cuándo llega y con cuánta antelación?</h2>
         <div class="deslizador">
           <label for="lead_time">Antelación de la reserva</label>
-          <input type="range" id="lead_time" min="0" max="500" value="180">
-          <output for="lead_time"><span>180</span><small>días</small></output>
+          <input type="range" id="lead_time" min="0" max="500" value="90">
+          <output for="lead_time"><span>90</span><small>días</small></output>
         </div>
         <p class="nota">Mes de llegada</p>
         <div class="opciones" data-campo="arrival_date_month">
@@ -348,6 +351,8 @@
         </div>
         <div class="fila-mixta" style="margin-top:14px">
           <div class="campo corto"><label for="country">País (ISO3)</label><input type="text" id="country" value="ESP" maxlength="3" style="text-transform:uppercase"></div>
+          <div class="campo corto"><label for="required_car_parking_spaces">Plazas de parking</label><input type="number" id="required_car_parking_spaces" value="0" min="0"></div>
+          <div class="campo corto"><label for="total_of_special_requests">Peticiones especiales</label><input type="number" id="total_of_special_requests" value="1" min="0"></div>
           <div class="campo"><label>Ya se ha alojado antes</label>
             <div class="opciones" data-campo="is_repeated_guest">
               <button data-valor="0" aria-pressed="true">No</button><button data-valor="1">Sí</button>
@@ -390,8 +395,6 @@
             <select id="reserved_room_type"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select></div>
           <div class="campo"><label for="assigned_room_type">Habitación asignada</label>
             <select id="assigned_room_type"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select></div>
-          <div class="campo corto"><label for="required_car_parking_spaces">Plazas de parking</label><input type="number" id="required_car_parking_spaces" value="1" min="0"></div>
-          <div class="campo corto"><label for="total_of_special_requests">Peticiones especiales</label><input type="number" id="total_of_special_requests" value="2" min="0"></div>
           <div class="campo corto"><label for="booking_changes">Cambios en la reserva</label><input type="number" id="booking_changes" value="0" min="0"></div>
           <div class="campo corto"><label for="days_in_waiting_list">Días en lista de espera</label><input type="number" id="days_in_waiting_list" value="0" min="0"></div>
           <div class="campo corto"><label for="agent">Agente</label><input type="number" id="agent" value="240" min="0"></div>
@@ -429,6 +432,13 @@
       </div>
 
       <div class="recomendacion" id="recomendacion">Completa la reserva a la izquierda. Con la predicción en vivo activada, no hace falta pulsar nada.</div>
+
+      <div class="presets">
+        <span>Ejemplos:</span>
+        <button type="button" class="btn secundario" data-preset="fiel">Cliente fiel</button>
+        <button type="button" class="btn secundario" data-preset="media">Reserva típica</button>
+        <button type="button" class="btn secundario" data-preset="riesgo">Alto riesgo</button>
+      </div>
 
       <div class="acciones">
         <button class="btn principal" id="btn-predecir">Calcular riesgo</button>
@@ -587,6 +597,23 @@ function cambio() {
 $('#vivo').addEventListener('change', () => { if ($('#vivo').checked) predecir(true); });
 $('#btn-predecir').addEventListener('click', () => predecir(false));
 $('#btn-reset').addEventListener('click', () => location.reload());
+
+/* presets: ejemplos que recorren todo el rango del modelo */
+const PRESETS = {
+  fiel:   { lead_time: 5,   deposit_type: 'No Deposit', market_segment: 'Direct',    is_repeated_guest: '1',
+            previous_bookings_not_canceled: 4, previous_cancellations: 0,
+            required_car_parking_spaces: 1, total_of_special_requests: 2, booking_changes: 1 },
+  media:  { lead_time: 90,  deposit_type: 'No Deposit', market_segment: 'Online TA', is_repeated_guest: '0',
+            previous_bookings_not_canceled: 0, previous_cancellations: 0,
+            required_car_parking_spaces: 0, total_of_special_requests: 1, booking_changes: 0 },
+  riesgo: { lead_time: 300, deposit_type: 'Non Refund', market_segment: 'Groups',    is_repeated_guest: '0',
+            previous_bookings_not_canceled: 0, previous_cancellations: 1,
+            required_car_parking_spaces: 0, total_of_special_requests: 0, booking_changes: 0 },
+};
+$$('.presets button').forEach(b => b.addEventListener('click', () => {
+  cargarReserva(PRESETS[b.dataset.preset]);
+  cambio();
+}));
 
 async function llamarApi(reserva) {
   const res = await fetch('/predict', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(reserva) });

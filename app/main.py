@@ -29,7 +29,7 @@ class Reserva(BaseModel):
     """
 
     hotel: Literal["City Hotel", "Resort Hotel"] = "City Hotel"
-    lead_time: int = Field(180, ge=0, description="Dias entre la reserva y la llegada")
+    lead_time: int = Field(90, ge=0, description="Dias entre la reserva y la llegada")
     arrival_date_year: int = 2017
     arrival_date_month: Literal[
         "January", "February", "March", "April", "May", "June",
@@ -57,8 +57,8 @@ class Reserva(BaseModel):
     days_in_waiting_list: int = Field(0, ge=0)
     customer_type: str = "Transient"
     adr: float = Field(140.0, description="Average Daily Rate: precio medio por noche")
-    required_car_parking_spaces: int = Field(1, ge=0)
-    total_of_special_requests: int = Field(2, ge=0)
+    required_car_parking_spaces: int = Field(0, ge=0)
+    total_of_special_requests: int = Field(1, ge=0)
 
 
 @app.get("/")
