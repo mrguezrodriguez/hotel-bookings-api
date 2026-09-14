@@ -6,6 +6,16 @@ API REST que sirve un modelo **XGBoost** (ROC-AUC 0,95 en test) para estimar la 
 
 > El plan gratuito de Render "duerme" el servicio tras un rato de inactividad. Mientras dure la corrección hay un ping a `/health` cada 5 minutos configurado en [cron-job.org](https://cron-job.org) para que no llegue a dormirse.
 
+## Interfaz web
+
+Además de los endpoints REST, el servicio expone una interfaz web mínima en `/app`, pensada para probar el modelo sin necesidad de `curl` ni Swagger:
+
+🖥️ **Demo en vivo**: https://hotel-bookings-api.onrender.com/app
+
+Permite rellenar los datos de una reserva desde un formulario, ver la predicción del modelo (etiqueta, probabilidad y recomendación) y consultar el historial de las predicciones hechas durante la sesión. Es una capa de productivización sobre la misma API — no cambia el modelo ni el pipeline, solo hace que el servicio sea usable por alguien no técnico sin pasar por la documentación de Swagger.
+
+![Captura de la interfaz web](docs/frontend-screenshot.png)
+
 ## Cómo se usa
 
 | Endpoint | Descripción |
