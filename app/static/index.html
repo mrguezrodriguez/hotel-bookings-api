@@ -133,8 +133,8 @@
   .dial .arco{stroke:#a9aeb6;transition:stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1),stroke .4s}
   .dial .aguja{transform-origin:110px 110px;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
   .dial .cifra{
-    position:absolute;left:0;right:0;bottom:6px;text-align:center;
-    font-family:var(--display);font-size:3.2rem;font-weight:300;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+    position:absolute;left:18%;right:18%;bottom:2px;text-align:center;pointer-events:none;
+    font-family:var(--display);font-size:3rem;font-weight:300;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
   }
   .dial .cifra small{font-size:1.1rem;font-weight:400;color:var(--tinta-2);vertical-align:top;margin-left:2px}
   .dial .ticks text{fill:#9096a0;font-family:var(--ui);font-size:10px}
@@ -411,8 +411,7 @@
           <path class="arco" id="arco" d="M20 110 A90 90 0 0 1 200 110" fill="none" stroke-width="14" stroke-linecap="round"
                 stroke-dasharray="283" stroke-dashoffset="283"/>
           <g class="aguja" id="aguja" style="transform:rotate(-90deg)">
-            <line x1="110" y1="110" x2="110" y2="32" stroke="#3a404a" stroke-width="2.5" stroke-linecap="round"/>
-            <circle cx="110" cy="110" r="6" fill="#3a404a"/>
+            <line x1="110" y1="46" x2="110" y2="30" stroke="#3a404a" stroke-width="3" stroke-linecap="round"/>
           </g>
         </svg>
         <div class="cifra" id="cifra">—<small>%</small></div>
