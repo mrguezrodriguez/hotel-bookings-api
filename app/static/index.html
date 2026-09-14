@@ -3,482 +3,849 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hotel Bookings - Riesgo de cancelación</title>
+<title>Recepción · Riesgo de cancelación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,50&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --tinta: #1c2b3a;
-    --tinta-suave: #46607a;
-    --acento: #c96f3e;
-    --acento-suave: #f3e2d4;
-    --alerta: #b23b3b;
-    --alerta-suave: #f5dede;
-    --hueso: #faf8f5;
-    --linea: #e4ddd3;
+  :root{
+    --papel:#f4f4f2;
+    --papel-2:#ffffff;
+    --noche:#3a404a;
+    --noche-2:#e6e8ec;
+    --noche-3:#d3d7de;
+    --tinta:#262a31;
+    --tinta-2:#6b727d;
+    --laton:#b08d4a;
+    --laton-2:#c9ab6e;
+    --coral:#c8623f;
+    --coral-2:#ffd9cf;
+    --salvia:#5f9f7f;
+    --salvia-2:#d6efe2;
+    --linea:#d5dae2;
+    --radio:14px;
+    --ui:"Manrope",system-ui,sans-serif;
+    --display:"Fraunces",Georgia,serif;
   }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: "Georgia", "Iowan Old Style", serif;
-    background: var(--hueso);
-    color: var(--tinta);
-  }
-  header {
-    padding: 28px 40px 20px;
-    border-bottom: 2px solid var(--tinta);
-  }
-  header .marca {
-    font-size: 0.72rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--acento);
-    font-family: -apple-system, sans-serif;
-    font-weight: 700;
-  }
-  header h1 { margin: 4px 0 0; font-size: 1.7rem; font-weight: 400; }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--papel);color:var(--tinta);font-family:var(--ui);font-size:15px;line-height:1.5}
+  button{font-family:var(--ui)}
+  :focus-visible{outline:2px solid var(--tinta-2);outline-offset:2px}
 
-  .layout {
-    display: grid;
-    grid-template-columns: 1.3fr 1fr;
-    gap: 0;
-    align-items: start;
+  /* ---------- cabecera ---------- */
+  .top{
+    display:flex;align-items:center;justify-content:space-between;gap:24px;
+    padding:12px 40px;background:var(--papel-2);color:var(--tinta);border-bottom:1px solid var(--linea);
   }
-  @media (max-width: 880px) {
-    .layout { grid-template-columns: 1fr; }
+  .marca{display:flex;align-items:baseline;gap:10px}
+  .marca .logo{font-family:var(--display);font-size:1.15rem;font-weight:500;letter-spacing:-.01em;font-variation-settings:"SOFT" 50}
+  .marca .logo em{color:var(--tinta-2);font-style:italic;font-weight:300}
+  .marca small{color:var(--tinta-2);font-size:.78rem}
+  .tabs{display:flex;gap:4px}
+  .tabs button{
+    border:0;background:transparent;color:var(--tinta-2);padding:8px 14px;border-bottom:2px solid transparent;
+    font-weight:600;font-size:.85rem;cursor:pointer;transition:color .2s,border-color .2s;
   }
+  .tabs button:hover{color:var(--tinta)}
+  .tabs button[aria-selected="true"]{color:var(--tinta);border-bottom-color:var(--tinta)}
+  .vivo{display:flex;align-items:center;gap:10px;font-size:.85rem;color:var(--tinta-2);cursor:pointer;user-select:none}
+  .vivo input{position:absolute;opacity:0;width:0;height:0}
+  .vivo .pista{width:38px;height:22px;border-radius:999px;background:var(--noche-3);position:relative;transition:background .2s}
+  .vivo .pista::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+  .vivo input:checked + .pista{background:var(--salvia)}
+  .vivo input:checked + .pista::after{transform:translateX(16px)}
+  .vivo input:focus-visible + .pista{outline:2px solid var(--tinta-2);outline-offset:2px}
 
-  .columna-form { padding: 30px 40px 60px; }
-  .columna-resultado {
-    position: sticky;
-    top: 0;
-    padding: 30px 40px 60px;
-    border-left: 2px solid var(--tinta);
-    min-height: 100vh;
-    background: #fff;
-  }
+  /* ---------- vistas ---------- */
+  .vista{display:none}
+  .vista.activa{display:block}
 
-  .grupo { margin-bottom: 28px; }
-  .grupo > .titulo-grupo {
-    font-family: -apple-system, sans-serif;
-    font-size: 0.68rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--tinta-suave);
-    border-bottom: 1px solid var(--linea);
-    padding-bottom: 6px;
-    margin-bottom: 14px;
-  }
-  .fila { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; }
-  .campo label {
-    display: block;
-    font-family: -apple-system, sans-serif;
-    font-size: 0.74rem;
-    color: var(--tinta-suave);
-    margin-bottom: 4px;
-  }
-  .campo input, .campo select {
-    width: 100%;
-    padding: 8px 4px;
-    border: none;
-    border-bottom: 1.5px solid var(--linea);
-    background: transparent;
-    font-family: -apple-system, sans-serif;
-    font-size: 0.92rem;
-    color: var(--tinta);
-  }
-  .campo input:focus, .campo select:focus {
-    outline: none;
-    border-bottom-color: var(--acento);
-  }
+  .escenario{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(360px,.9fr);min-height:calc(100vh - 70px)}
+  @media (max-width:960px){.escenario{grid-template-columns:1fr}}
 
-  .btn-predecir {
-    font-family: -apple-system, sans-serif;
-    background: var(--tinta);
-    color: white;
-    border: none;
-    padding: 14px 30px;
-    font-size: 0.95rem;
-    letter-spacing: 0.03em;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-  .btn-predecir:hover { background: var(--acento); }
-  .btn-limpiar {
-    font-family: -apple-system, sans-serif;
-    background: none;
-    border: none;
-    color: var(--tinta-suave);
-    text-decoration: underline;
-    cursor: pointer;
-    font-size: 0.85rem;
-    margin-left: 16px;
-  }
+  /* ---------- constructor ---------- */
+  .constructor{padding:36px 40px 80px;max-width:820px}
+  .constructor h1{font-family:var(--display);font-weight:400;font-size:1.7rem;line-height:1.1;margin:0 0 6px;letter-spacing:-.01em}
+  .constructor .intro{color:var(--tinta-2);margin:0 0 34px;max-width:56ch}
 
-  .placeholder-resultado {
-    font-family: -apple-system, sans-serif;
-    color: var(--tinta-suave);
-    font-size: 0.9rem;
-    line-height: 1.6;
-  }
+  .paso{margin-bottom:34px}
+  .paso h2{font-family:var(--display);font-weight:500;font-size:1.25rem;margin:0 0 4px}
+  .paso .nota{color:var(--tinta-2);font-size:.85rem;margin:0 0 14px}
 
-  .tarjeta-resultado { display: none; }
-  .tarjeta-resultado.visible { display: block; }
-  .veredicto {
-    font-family: -apple-system, sans-serif;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--tinta-suave);
+  /* opciones tipo tarjeta */
+  .opciones{display:flex;flex-wrap:wrap;gap:8px}
+  .opciones button{
+    border:1.5px solid var(--linea);background:var(--papel-2);color:var(--tinta);
+    padding:9px 14px;border-radius:999px;font-size:.88rem;font-weight:500;cursor:pointer;
+    transition:border-color .15s,background .15s,color .15s;
   }
-  .veredicto-titulo {
-    font-size: 2rem;
-    margin: 6px 0 20px;
-    line-height: 1.15;
-  }
-  .veredicto-titulo.riesgo { color: var(--alerta); }
-  .veredicto-titulo.estable { color: #3a6b52; }
+  .opciones button:hover{border-color:var(--tinta-2)}
+  .opciones button[aria-pressed="true"]{background:var(--noche);border-color:var(--noche);color:#fff}
+  .opciones.grande button{padding:16px 22px;border-radius:var(--radio);font-size:1rem;min-width:180px;text-align:left;line-height:1.25}
+  .opciones.grande button span{display:block;font-size:.78rem;font-weight:400;opacity:.7;margin-top:2px}
 
-  .anillo-wrap { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
-  .anillo { position: relative; width: 96px; height: 96px; flex-shrink: 0; }
-  .anillo svg { transform: rotate(-90deg); }
-  .anillo-num {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-family: -apple-system, sans-serif;
-    font-weight: 700; font-size: 1.05rem;
-  }
-  .recomendacion {
-    font-family: -apple-system, sans-serif;
-    font-size: 0.88rem;
-    color: var(--tinta);
-    background: var(--acento-suave);
-    padding: 14px 16px;
-    border-left: 3px solid var(--acento);
-  }
-  .tarjeta-resultado.riesgo .recomendacion {
-    background: var(--alerta-suave);
-    border-left-color: var(--alerta);
-  }
+  /* sliders */
+  .deslizador{display:grid;grid-template-columns:1fr auto;gap:6px 18px;align-items:center;margin:8px 0 6px}
+  .deslizador label{grid-column:1/-1;font-size:.88rem;font-weight:600}
+  .deslizador output{font-family:var(--display);font-size:1.5rem;font-weight:500;min-width:4.5ch;text-align:right;font-variant-numeric:tabular-nums}
+  .deslizador output small{font-family:var(--ui);font-size:.75rem;color:var(--tinta-2);font-weight:500;margin-left:4px}
+  input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--noche-3) var(--p,0%),var(--linea) var(--p,0%));outline:none;margin:0}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--noche);border:3px solid #fff;box-shadow:0 1px 4px rgba(23,37,56,.3);cursor:grab}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--noche);border:3px solid #fff;cursor:grab}
+  input[type=range]:focus-visible{outline:2px solid var(--tinta-2);outline-offset:4px}
 
-  .historial-titulo {
-    font-family: -apple-system, sans-serif;
-    font-size: 0.68rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--tinta-suave);
-    margin: 34px 0 10px;
-    border-bottom: 1px solid var(--linea);
-    padding-bottom: 6px;
+  /* contadores */
+  .contadores{display:flex;flex-wrap:wrap;gap:14px}
+  .contador{display:flex;align-items:center;gap:10px;background:var(--papel-2);border:1.5px solid var(--linea);border-radius:999px;padding:6px 8px 6px 16px}
+  .contador span{font-size:.88rem;font-weight:500;min-width:6ch}
+  .contador b{font-family:var(--display);font-size:1.2rem;font-weight:500;min-width:2ch;text-align:center}
+  .contador button{width:30px;height:30px;border-radius:50%;border:0;background:var(--papel);color:var(--tinta);font-size:1.1rem;cursor:pointer;line-height:1}
+  .contador button:hover{background:var(--noche);color:#fff}
+
+  .fila-mixta{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end}
+  .campo{display:flex;flex-direction:column;gap:4px}
+  .campo label{font-size:.82rem;color:var(--tinta-2);font-weight:500}
+  .campo input,.campo select{
+    font-family:var(--ui);font-size:.92rem;padding:9px 12px;border:1.5px solid var(--linea);border-radius:10px;
+    background:var(--papel-2);color:var(--tinta);min-width:110px;
   }
-  table { width: 100%; border-collapse: collapse; font-family: -apple-system, sans-serif; }
-  th { text-align: left; font-size: 0.68rem; text-transform: uppercase; color: var(--tinta-suave); padding: 6px 4px; }
-  td { padding: 8px 4px; font-size: 0.82rem; border-top: 1px solid var(--linea); }
-  .chip { font-size: 0.72rem; padding: 2px 8px; border-radius: 3px; font-weight: 600; }
-  .chip.riesgo { background: var(--alerta-suave); color: var(--alerta); }
-  .chip.estable { background: #dcece2; color: #3a6b52; }
+  .campo input:focus,.campo select:focus{border-color:var(--tinta-2);outline:none}
+  .campo.corto input{width:90px;min-width:0}
+
+  details.mas{border-top:1.5px solid var(--linea);padding-top:14px}
+  details.mas summary{cursor:pointer;font-weight:600;font-size:.92rem;color:var(--tinta-2);list-style:none;display:flex;align-items:center;gap:8px}
+  details.mas summary::-webkit-details-marker{display:none}
+  details.mas summary::before{content:"+";display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--papel-2);border:1.5px solid var(--linea);font-size:1rem}
+  details.mas[open] summary::before{content:"–"}
+  details.mas .fila-mixta{margin-top:16px}
+
+  /* ---------- panel resultado ---------- */
+  .panel{
+    position:sticky;top:0;align-self:start;min-height:calc(100vh - 70px);
+    background:#eceef0;color:var(--tinta);padding:34px 36px 40px;border-left:1px solid var(--linea);
+  }
+  @media (max-width:960px){.panel{position:static;min-height:auto}}
+
+  .dial{position:relative;width:min(100%,320px);margin:0 auto 6px}
+  .dial svg{width:100%;display:block;overflow:visible}
+  .dial .arco-fondo{stroke:#dcdfe4}
+  .dial .arco{stroke:#a9aeb6;transition:stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1),stroke .4s}
+  .dial .aguja{transform-origin:110px 110px;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+  .dial .cifra{
+    position:absolute;left:0;right:0;bottom:6px;text-align:center;
+    font-family:var(--display);font-size:3.2rem;font-weight:300;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+  }
+  .dial .cifra small{font-size:1.1rem;font-weight:400;color:var(--tinta-2);vertical-align:top;margin-left:2px}
+  .dial .ticks text{fill:#9096a0;font-family:var(--ui);font-size:10px}
+
+  .veredicto{text-align:center;margin:0 0 4px}
+  .veredicto .titulo{font-family:var(--display);font-size:1.6rem;font-weight:500;margin:0;line-height:1.15;min-height:1.2em}
+  .veredicto .titulo.riesgo{color:#a84f31}
+  .veredicto .titulo.estable{color:#3f7d62}
+  .veredicto .sub{color:var(--tinta-2);font-size:.85rem;margin:6px 0 0;min-height:1.3em}
+
+  .estado{font-size:.8rem;color:var(--tinta-2);text-align:center;min-height:1.3em;margin:4px 0 18px}
+  .estado.error{color:#a84f31}
+
+  .senales{margin:0 0 20px}
+  .senales h3{font-size:.85rem;font-weight:600;color:var(--tinta-2);margin:0 0 8px}
+  .senales ul{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:6px}
+  .senales li{font-size:.8rem;padding:5px 10px;border-radius:8px;background:var(--papel-2);border:1px solid var(--linea);display:flex;align-items:center;gap:6px}
+  .senales li::before{content:"";width:7px;height:7px;border-radius:50%;background:#a9aeb6}
+  .senales li.sube::before{background:var(--coral)}
+  .senales li.baja::before{background:var(--salvia)}
+  .senales .vacio{color:var(--tinta-2);font-size:.8rem}
+
+  .recomendacion{
+    background:var(--papel-2);border-left:3px solid #a9aeb6;padding:12px 14px;border-radius:0 10px 10px 0;
+    font-size:.88rem;line-height:1.5;margin-bottom:22px;color:var(--tinta);min-height:1em;
+  }
+  .recomendacion.riesgo{border-left-color:var(--coral)}
+  .recomendacion.estable{border-left-color:var(--salvia)}
+
+  .acciones{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px}
+  .btn{border:0;border-radius:999px;padding:12px 22px;font-weight:700;font-size:.9rem;cursor:pointer;transition:transform .1s,background .2s}
+  .btn:active{transform:scale(.98)}
+  .btn.principal{background:var(--noche);color:#fff}
+  .btn.principal:hover{background:#262a31}
+  .btn.secundario{background:transparent;color:var(--tinta);border:1.5px solid var(--noche-3)}
+  .btn.secundario:hover{border-color:var(--tinta-2)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  .historial h3{font-size:.85rem;font-weight:600;color:var(--tinta-2);margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+  .historial h3 button{background:none;border:0;color:var(--tinta);text-decoration:underline;font-size:.8rem;cursor:pointer;font-weight:600;padding:0}
+  .historial ul{list-style:none;padding:0;margin:0;display:grid;gap:6px;max-height:280px;overflow:auto}
+  .historial li{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;font-size:.82rem;padding:8px 10px;border-radius:8px;background:var(--papel-2);border:1px solid var(--linea);cursor:pointer}
+  .historial li:hover{border-color:var(--tinta-2)}
+  .historial li time{color:var(--tinta-2);font-variant-numeric:tabular-nums}
+  .historial li .barra{height:6px;border-radius:3px;background:#e6e8ec;position:relative;overflow:hidden}
+  .historial li .barra i{position:absolute;inset:0;width:var(--w);background:var(--coral)}
+  .historial li.estable .barra i{background:var(--salvia)}
+  .historial li b{font-variant-numeric:tabular-nums;min-width:5ch;text-align:right}
+  .historial .vacio{color:var(--tinta-2);font-size:.82rem}
+
+  /* ---------- vista lote ---------- */
+  .lote{padding:36px 40px 80px;max-width:1100px}
+  .lote h1{font-family:var(--display);font-weight:400;font-size:1.7rem;margin:0 0 6px}
+  .lote .intro{color:var(--tinta-2);max-width:60ch;margin:0 0 26px}
+  .zona{
+    display:block;border:2px dashed var(--linea);border-radius:var(--radio);padding:40px;text-align:center;background:var(--papel-2);
+    cursor:pointer;transition:border-color .15s,background .15s;
+  }
+  .zona.sobre{border-color:var(--tinta-2);background:#f8f8f6}
+  .zona p{margin:0 0 6px;font-weight:600}
+  .zona small{color:var(--tinta-2)}
+  .zona input{display:none}
+  .lote-barra{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:20px 0}
+    .lote .btn{padding:10px 18px;font-size:.85rem}
+      .progreso{flex:1;min-width:200px;height:8px;border-radius:4px;background:var(--linea);overflow:hidden}
+  .progreso i{display:block;height:100%;width:0;background:var(--noche);transition:width .2s}
+  .resumen-lote{display:flex;gap:24px;flex-wrap:wrap;margin:6px 0 18px}
+  .resumen-lote div{font-size:.85rem;color:var(--tinta-2)}
+  .resumen-lote b{display:block;font-family:var(--display);font-size:1.4rem;font-weight:500;color:var(--tinta);line-height:1.1}
+  .resumen-lote b.riesgo{color:var(--coral)}
+  .resumen-lote b.estable{color:#3a8a63}
+  .tabla-wrap{overflow:auto;background:var(--papel-2);border:1.5px solid var(--linea);border-radius:var(--radio)}
+  table{border-collapse:collapse;width:100%;font-size:.82rem}
+  th{text-align:left;padding:10px 12px;font-weight:600;color:var(--tinta-2);border-bottom:1.5px solid var(--linea);white-space:nowrap;position:sticky;top:0;background:var(--papel-2)}
+  td{padding:9px 12px;border-bottom:1px solid #eceef2;white-space:nowrap;font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:0}
+  .chip{display:inline-block;font-size:.75rem;font-weight:700;padding:3px 9px;border-radius:6px}
+  .chip.riesgo{background:var(--coral-2);color:#a1391b}
+  .chip.estable{background:var(--salvia-2);color:#2b6b4c}
+  .chip.pendiente{background:var(--papel);color:var(--tinta-2)}
+  .chip.error{background:#f3e3e3;color:#8a2a2a}
+  .aviso-lote{font-size:.85rem;color:var(--tinta-2);margin-top:12px}
+
+  /* ---------- ayuda ---------- */
+  .btn-ayuda{
+    width:32px;height:32px;border-radius:50%;border:1.5px solid var(--linea);background:transparent;color:var(--tinta-2);
+    font-family:var(--display);font-size:1.05rem;font-weight:500;cursor:pointer;display:grid;place-items:center;transition:color .2s,border-color .2s;
+  }
+  .btn-ayuda:hover{color:var(--tinta);border-color:var(--tinta-2)}
+  .derecha{display:flex;align-items:center;gap:18px}
+  dialog.ayuda{
+    border:0;border-radius:var(--radio);padding:28px 30px 24px;max-width:440px;width:calc(100% - 32px);
+    background:var(--papel-2);color:var(--tinta);box-shadow:0 20px 60px rgba(38,42,49,.2);
+  }
+  dialog.ayuda::backdrop{background:rgba(38,42,49,.4)}
+  dialog.ayuda h2{font-family:var(--display);font-weight:500;font-size:1.3rem;margin:0 0 14px}
+  dialog.ayuda ol{margin:0 0 18px;padding-left:22px;display:grid;gap:8px;font-size:.92rem}
+  dialog.ayuda ol b{font-weight:600}
+  dialog.ayuda p{font-size:.85rem;color:var(--tinta-2);margin:0 0 18px}
+  dialog.ayuda .btn{background:var(--noche);color:#fff}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important}
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="marca">Hotel Bookings API</div>
-  <h1>Estimación de riesgo de cancelación</h1>
+<header class="top">
+  <div class="marca">
+    <div class="logo">Recepción <em>Bookings</em></div>
+    <small>estimación de riesgo de cancelación</small>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-vista="reserva">Una reserva</button>
+    <button role="tab" aria-selected="false" data-vista="lote">Lote CSV</button>
+    <button role="tab" aria-selected="false" data-vista="historico">Histórico</button>
+  </nav>
+  <div class="derecha">
+    <label class="vivo" title="Recalcula automáticamente al cambiar cualquier dato">
+      <input type="checkbox" id="vivo" checked>
+      <span class="pista"></span>
+      Predicción en vivo
+    </label>
+    <button class="btn-ayuda" id="btn-ayuda" type="button" aria-label="Cómo funciona la app" title="Cómo funciona la app">?</button>
+  </div>
 </header>
 
-<div class="layout">
-  <div class="columna-form">
+<dialog class="ayuda" id="ayuda">
+  <h2>Cómo funciona la app</h2>
+  <ol>
+    <li><b>Una reserva:</b> describe la reserva con los controles y el dial te da la probabilidad de cancelación al momento.</li>
+    <li><b>Lote CSV:</b> sube un fichero con muchas reservas y descárgalo de vuelta con el riesgo de cada una.</li>
+    <li><b>Histórico:</b> todo lo que calcules queda guardado en este navegador; puedes reabrir cualquier reserva o exportarlo.</li>
+  </ol>
+  <p>Las señales del perfil son orientativas; la cifra del dial es la que da el modelo.</p>
+  <button class="btn" id="btn-cerrar-ayuda" type="button">Entendido</button>
+</dialog>
 
-    <div class="grupo">
-      <div class="titulo-grupo">Reserva</div>
-      <div class="fila">
-        <div class="campo">
-          <label>Hotel</label>
-          <select id="hotel">
-            <option value="City Hotel">City Hotel</option>
-            <option value="Resort Hotel">Resort Hotel</option>
-          </select>
-        </div>
-        <div class="campo">
-          <label>Antelación (días)</label>
-          <input type="number" id="lead_time" value="180">
-        </div>
-        <div class="campo">
-          <label>Año de llegada</label>
-          <input type="number" id="arrival_date_year" value="2017">
-        </div>
-        <div class="campo">
-          <label>Mes de llegada</label>
-          <select id="arrival_date_month">
-            <option>January</option><option>February</option><option>March</option>
-            <option>April</option><option>May</option><option>June</option>
-            <option>July</option><option selected>August</option><option>September</option>
-            <option>October</option><option>November</option><option>December</option>
-          </select>
-        </div>
-        <div class="campo">
-          <label>Semana del año</label>
-          <input type="number" id="arrival_date_week_number" value="34">
-        </div>
-        <div class="campo">
-          <label>Día del mes</label>
-          <input type="number" id="arrival_date_day_of_month" value="20">
+<!-- ================= VISTA: UNA RESERVA ================= -->
+<section class="vista activa" id="vista-reserva">
+  <div class="escenario">
+
+    <div class="constructor">
+      <h1>Describe la reserva</h1>
+      <p class="intro">Ajusta los controles y el dial de la derecha se actualiza solo. Los detalles menos habituales están al final, plegados.</p>
+
+      <div class="paso">
+        <h2>¿En qué hotel?</h2>
+        <div class="opciones grande" data-campo="hotel">
+          <button data-valor="City Hotel" aria-pressed="true">City Hotel<span>Ciudad, alta rotación</span></button>
+          <button data-valor="Resort Hotel" aria-pressed="false">Resort Hotel<span>Vacacional, estancias largas</span></button>
         </div>
       </div>
-    </div>
 
-    <div class="grupo">
-      <div class="titulo-grupo">Estancia</div>
-      <div class="fila">
-        <div class="campo">
-          <label>Noches fin de semana</label>
-          <input type="number" id="stays_in_weekend_nights" value="2">
+      <div class="paso">
+        <h2>¿Cuándo llega y con cuánta antelación?</h2>
+        <div class="deslizador">
+          <label for="lead_time">Antelación de la reserva</label>
+          <input type="range" id="lead_time" min="0" max="500" value="180">
+          <output for="lead_time"><span>180</span><small>días</small></output>
         </div>
-        <div class="campo">
-          <label>Noches entre semana</label>
-          <input type="number" id="stays_in_week_nights" value="5">
+        <p class="nota">Mes de llegada</p>
+        <div class="opciones" data-campo="arrival_date_month">
+          <button data-valor="January">Ene</button><button data-valor="February">Feb</button><button data-valor="March">Mar</button>
+          <button data-valor="April">Abr</button><button data-valor="May">May</button><button data-valor="June">Jun</button>
+          <button data-valor="July">Jul</button><button data-valor="August" aria-pressed="true">Ago</button><button data-valor="September">Sep</button>
+          <button data-valor="October">Oct</button><button data-valor="November">Nov</button><button data-valor="December">Dic</button>
         </div>
-        <div class="campo">
-          <label>Cambios en la reserva</label>
-          <input type="number" id="booking_changes" value="0">
-        </div>
-        <div class="campo">
-          <label>Días en lista de espera</label>
-          <input type="number" id="days_in_waiting_list" value="0">
+        <div class="fila-mixta" style="margin-top:14px">
+          <div class="campo corto"><label for="arrival_date_year">Año</label><input type="number" id="arrival_date_year" value="2017"></div>
+          <div class="campo corto"><label for="arrival_date_day_of_month">Día del mes</label><input type="number" id="arrival_date_day_of_month" value="20" min="1" max="31"></div>
+          <div class="campo corto"><label for="arrival_date_week_number">Semana del año</label><input type="number" id="arrival_date_week_number" value="34" min="1" max="53"></div>
         </div>
       </div>
-    </div>
 
-    <div class="grupo">
-      <div class="titulo-grupo">Huéspedes</div>
-      <div class="fila">
-        <div class="campo">
-          <label>Adultos</label>
-          <input type="number" id="adults" value="2">
+      <div class="paso">
+        <h2>¿Cuánto se queda y a qué precio?</h2>
+        <div class="contadores">
+          <div class="contador" data-campo="stays_in_weekend_nights" data-min="0" data-max="30"><span>Noches fin de semana</span><button type="button" data-d="-1" aria-label="menos">−</button><b>2</b><button type="button" data-d="1" aria-label="más">+</button></div>
+          <div class="contador" data-campo="stays_in_week_nights" data-min="0" data-max="60"><span>Noches entre semana</span><button type="button" data-d="-1" aria-label="menos">−</button><b>5</b><button type="button" data-d="1" aria-label="más">+</button></div>
         </div>
-        <div class="campo">
-          <label>Niños</label>
-          <input type="number" id="children" value="1">
+        <div class="deslizador" style="margin-top:16px">
+          <label for="adr">Precio medio por noche (ADR)</label>
+          <input type="range" id="adr" min="0" max="500" step="1" value="140">
+          <output for="adr"><span>140</span><small>€</small></output>
         </div>
-        <div class="campo">
-          <label>Bebés</label>
-          <input type="number" id="babies" value="0">
-        </div>
-        <div class="campo">
-          <label>País</label>
-          <input type="text" id="country" value="ESP">
-        </div>
-        <div class="campo">
-          <label>Tipo de cliente</label>
-          <select id="customer_type">
-            <option value="Transient">Transient</option>
-            <option value="Contract">Contract</option>
-            <option value="Transient-Party">Transient-Party</option>
-            <option value="Group">Group</option>
-          </select>
-        </div>
-        <div class="campo">
-          <label>Huésped repetido</label>
-          <select id="is_repeated_guest">
-            <option value="0">No</option>
-            <option value="1">Sí</option>
-          </select>
+        <p class="nota">Régimen</p>
+        <div class="opciones" data-campo="meal">
+          <button data-valor="BB" aria-pressed="true">Alojamiento y desayuno</button>
+          <button data-valor="HB">Media pensión</button>
+          <button data-valor="FB">Pensión completa</button>
+          <button data-valor="SC">Solo alojamiento</button>
+          <button data-valor="Undefined">Sin definir</button>
         </div>
       </div>
-    </div>
 
-    <div class="grupo">
-      <div class="titulo-grupo">Habitación y régimen</div>
-      <div class="fila">
-        <div class="campo">
-          <label>Régimen</label>
-          <select id="meal">
-            <option value="BB">BB — Bed & Breakfast</option>
-            <option value="HB">HB — Half Board</option>
-            <option value="FB">FB — Full Board</option>
-            <option value="SC">SC — Self Catering</option>
-            <option value="Undefined">Undefined</option>
-          </select>
+      <div class="paso">
+        <h2>¿Quién viene?</h2>
+        <div class="contadores">
+          <div class="contador" data-campo="adults" data-min="0" data-max="10"><span>Adultos</span><button type="button" data-d="-1" aria-label="menos">−</button><b>2</b><button type="button" data-d="1" aria-label="más">+</button></div>
+          <div class="contador" data-campo="children" data-min="0" data-max="10"><span>Niños</span><button type="button" data-d="-1" aria-label="menos">−</button><b>1</b><button type="button" data-d="1" aria-label="más">+</button></div>
+          <div class="contador" data-campo="babies" data-min="0" data-max="5"><span>Bebés</span><button type="button" data-d="-1" aria-label="menos">−</button><b>0</b><button type="button" data-d="1" aria-label="más">+</button></div>
         </div>
-        <div class="campo">
-          <label>Habitación reservada</label>
-          <select id="reserved_room_type">
-            <option>A</option><option>B</option><option>C</option><option>D</option>
-            <option>E</option><option>F</option><option>G</option><option>H</option>
-          </select>
+        <p class="nota" style="margin-top:14px">Tipo de cliente</p>
+        <div class="opciones" data-campo="customer_type">
+          <button data-valor="Transient" aria-pressed="true">Individual</button>
+          <button data-valor="Transient-Party">Individual en grupo</button>
+          <button data-valor="Contract">Contrato</button>
+          <button data-valor="Group">Grupo</button>
         </div>
-        <div class="campo">
-          <label>Habitación asignada</label>
-          <select id="assigned_room_type">
-            <option>A</option><option>B</option><option>C</option><option>D</option>
-            <option>E</option><option>F</option><option>G</option><option>H</option>
-          </select>
-        </div>
-        <div class="campo">
-          <label>Plazas de parking</label>
-          <input type="number" id="required_car_parking_spaces" value="1">
+        <div class="fila-mixta" style="margin-top:14px">
+          <div class="campo corto"><label for="country">País (ISO3)</label><input type="text" id="country" value="ESP" maxlength="3" style="text-transform:uppercase"></div>
+          <div class="campo"><label>Ya se ha alojado antes</label>
+            <div class="opciones" data-campo="is_repeated_guest">
+              <button data-valor="0" aria-pressed="true">No</button><button data-valor="1">Sí</button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="grupo">
-      <div class="titulo-grupo">Canal, depósito y precio</div>
-      <div class="fila">
-        <div class="campo">
-          <label>Segmento de mercado</label>
-          <select id="market_segment">
-            <option value="Online TA">Online TA</option>
-            <option value="Offline TA/TO">Offline TA/TO</option>
-            <option value="Direct">Direct</option>
-            <option value="Corporate">Corporate</option>
-            <option value="Complementary">Complementary</option>
-            <option value="Groups">Groups</option>
-            <option value="Aviation">Aviation</option>
-          </select>
+      <div class="paso">
+        <h2>¿Cómo ha reservado y con qué garantía?</h2>
+        <p class="nota">Depósito</p>
+        <div class="opciones" data-campo="deposit_type">
+          <button data-valor="No Deposit" aria-pressed="true">Sin depósito</button>
+          <button data-valor="Non Refund">No reembolsable</button>
+          <button data-valor="Refundable">Reembolsable</button>
         </div>
-        <div class="campo">
-          <label>Canal de distribución</label>
-          <select id="distribution_channel">
-            <option value="TA/TO">TA/TO</option>
-            <option value="Direct">Direct</option>
-            <option value="Corporate">Corporate</option>
-            <option value="GDS">GDS</option>
-          </select>
+        <p class="nota" style="margin-top:14px">Segmento de mercado</p>
+        <div class="opciones" data-campo="market_segment">
+          <button data-valor="Online TA" aria-pressed="true">Agencia online</button>
+          <button data-valor="Offline TA/TO">Agencia / touroperador</button>
+          <button data-valor="Direct">Directo</button>
+          <button data-valor="Corporate">Corporativo</button>
+          <button data-valor="Groups">Grupos</button>
+          <button data-valor="Complementary">Cortesía</button>
+          <button data-valor="Aviation">Aviación</button>
         </div>
-        <div class="campo">
-          <label>Tipo de depósito</label>
-          <select id="deposit_type">
-            <option value="No Deposit">No Deposit</option>
-            <option value="Non Refund">Non Refund</option>
-            <option value="Refundable">Refundable</option>
-          </select>
-        </div>
-        <div class="campo">
-          <label>Agente</label>
-          <input type="number" id="agent" value="240">
-        </div>
-        <div class="campo">
-          <label>ADR (precio medio/noche)</label>
-          <input type="number" step="0.01" id="adr" value="140">
-        </div>
-        <div class="campo">
-          <label>Peticiones especiales</label>
-          <input type="number" id="total_of_special_requests" value="2">
-        </div>
-        <div class="campo">
-          <label>Cancelaciones previas</label>
-          <input type="number" id="previous_cancellations" value="0">
-        </div>
-        <div class="campo">
-          <label>Reservas previas sin cancelar</label>
-          <input type="number" id="previous_bookings_not_canceled" value="0">
+        <p class="nota" style="margin-top:14px">Canal de distribución</p>
+        <div class="opciones" data-campo="distribution_channel">
+          <button data-valor="TA/TO" aria-pressed="true">Agencia / touroperador</button>
+          <button data-valor="Direct">Directo</button>
+          <button data-valor="Corporate">Corporativo</button>
+          <button data-valor="GDS">GDS</button>
         </div>
       </div>
+
+      <details class="mas">
+        <summary>Más detalles de la reserva</summary>
+        <div class="fila-mixta">
+          <div class="campo"><label for="reserved_room_type">Habitación reservada</label>
+            <select id="reserved_room_type"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select></div>
+          <div class="campo"><label for="assigned_room_type">Habitación asignada</label>
+            <select id="assigned_room_type"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select></div>
+          <div class="campo corto"><label for="required_car_parking_spaces">Plazas de parking</label><input type="number" id="required_car_parking_spaces" value="1" min="0"></div>
+          <div class="campo corto"><label for="total_of_special_requests">Peticiones especiales</label><input type="number" id="total_of_special_requests" value="2" min="0"></div>
+          <div class="campo corto"><label for="booking_changes">Cambios en la reserva</label><input type="number" id="booking_changes" value="0" min="0"></div>
+          <div class="campo corto"><label for="days_in_waiting_list">Días en lista de espera</label><input type="number" id="days_in_waiting_list" value="0" min="0"></div>
+          <div class="campo corto"><label for="agent">Agente</label><input type="number" id="agent" value="240" min="0"></div>
+          <div class="campo corto"><label for="previous_cancellations">Cancelaciones previas</label><input type="number" id="previous_cancellations" value="0" min="0"></div>
+          <div class="campo corto"><label for="previous_bookings_not_canceled">Reservas previas cumplidas</label><input type="number" id="previous_bookings_not_canceled" value="0" min="0"></div>
+        </div>
+      </details>
     </div>
 
-    <button class="btn-predecir" onclick="predecir()">Calcular riesgo</button>
-    <button class="btn-limpiar" onclick="location.reload()">Restablecer</button>
+    <aside class="panel">
+      <div class="dial">
+        <svg viewBox="0 0 220 130" aria-hidden="true">
+          <g class="ticks">
+            <text x="14" y="128">0</text><text x="200" y="128">100</text><text x="103" y="14">50</text>
+          </g>
+          <path class="arco-fondo" d="M20 110 A90 90 0 0 1 200 110" fill="none" stroke-width="14" stroke-linecap="round"/>
+          <path class="arco" id="arco" d="M20 110 A90 90 0 0 1 200 110" fill="none" stroke-width="14" stroke-linecap="round"
+                stroke-dasharray="283" stroke-dashoffset="283"/>
+          <g class="aguja" id="aguja" style="transform:rotate(-90deg)">
+            <line x1="110" y1="110" x2="110" y2="32" stroke="#3a404a" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="110" cy="110" r="6" fill="#3a404a"/>
+          </g>
+        </svg>
+        <div class="cifra" id="cifra">—<small>%</small></div>
+      </div>
+
+      <div class="veredicto">
+        <p class="titulo" id="titulo">Esperando datos</p>
+        <p class="sub" id="sub">Probabilidad de cancelación según el modelo.</p>
+      </div>
+      <p class="estado" id="estado"></p>
+
+      <div class="senales">
+        <h3>Señales del perfil</h3>
+        <ul id="senales"><li class="vacio">Sin señales destacadas.</li></ul>
+      </div>
+
+      <div class="recomendacion" id="recomendacion">Completa la reserva a la izquierda. Con la predicción en vivo activada, no hace falta pulsar nada.</div>
+
+      <div class="acciones">
+        <button class="btn principal" id="btn-predecir">Calcular riesgo</button>
+        <button class="btn secundario" id="btn-reset">Restablecer</button>
+      </div>
+
+      <div class="historial">
+        <h3>Últimas predicciones <button id="btn-ver-hist" type="button">Ver histórico completo</button></h3>
+        <ul id="historial"><li class="vacio" style="background:none;cursor:default">Aquí verás las últimas cinco. Pulsa una para recuperar sus datos.</li></ul>
+      </div>
+    </aside>
   </div>
+</section>
 
-  <div class="columna-resultado">
-    <div class="placeholder-resultado" id="placeholder">
-      Completa los datos de la reserva y pulsa «Calcular riesgo». Aquí aparecerá la estimación del modelo y quedará registrada en el historial de esta sesión.
+<!-- ================= VISTA: LOTE CSV ================= -->
+<section class="vista" id="vista-lote">
+  <div class="lote">
+    <h1>Analiza un lote de reservas</h1>
+    <p class="intro">Sube un CSV con una reserva por fila y las mismas columnas que la API (<code>hotel, lead_time, adr…</code>). Cada fila se envía a <code>/predict</code> y obtienes el fichero de vuelta con la probabilidad y el veredicto.</p>
+
+    <label class="zona" id="zona">
+      <input type="file" id="fichero" accept=".csv,text/csv">
+      <p>Arrastra aquí tu CSV o haz clic para elegirlo</p>
+      <small>Cabecera en la primera fila. Las columnas que falten se rellenan con los valores por defecto del formulario.</small>
+    </label>
+
+    <div class="lote-barra">
+      <button class="btn principal" id="btn-lote" disabled>Calcular todo el lote</button>
+      <button class="btn secundario" id="btn-plantilla">Descargar plantilla CSV</button>
+      <div class="progreso"><i id="progreso"></i></div>
+      <button class="btn secundario" id="btn-export-lote" disabled>Exportar resultados</button>
     </div>
 
-    <div class="tarjeta-resultado" id="tarjeta">
-      <div class="veredicto">Estimación del modelo</div>
-      <div class="veredicto-titulo" id="veredicto-titulo"></div>
-
-      <div class="anillo-wrap">
-        <div class="anillo">
-          <svg width="96" height="96" viewBox="0 0 96 96">
-            <circle cx="48" cy="48" r="42" fill="none" stroke="#e4ddd3" stroke-width="8"/>
-            <circle id="anillo-progreso" cx="48" cy="48" r="42" fill="none" stroke="#c96f3e" stroke-width="8"
-                    stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round"/>
-          </svg>
-          <div class="anillo-num" id="anillo-num">0%</div>
-        </div>
-        <div style="font-family:-apple-system,sans-serif; font-size:0.85rem; color:var(--tinta-suave);">
-          Probabilidad calculada por el modelo XGBoost sobre esta combinación de variables.
-        </div>
-      </div>
-
-      <div class="recomendacion" id="recomendacion"></div>
+    <div class="resumen-lote" id="resumen-lote" hidden>
+      <div><b id="r-total">0</b>reservas</div>
+      <div><b class="riesgo" id="r-riesgo">0</b>en riesgo</div>
+      <div><b class="estable" id="r-estable">0</b>estables</div>
+      <div><b id="r-media">—</b>prob. media</div>
     </div>
 
-    <div class="historial-titulo">Historial de esta sesión</div>
-    <table>
-      <thead><tr><th>Hora</th><th>Perfil</th><th>Estado</th><th>%</th></tr></thead>
-      <tbody id="historial"></tbody>
-    </table>
+    <div class="tabla-wrap" id="tabla-wrap" hidden>
+      <table id="tabla-lote"><thead></thead><tbody></tbody></table>
+    </div>
+    <p class="aviso-lote" id="aviso-lote"></p>
   </div>
-</div>
+</section>
+
+
+<!-- ================= VISTA: HISTÓRICO ================= -->
+<section class="vista" id="vista-historico">
+  <div class="lote">
+    <h1>Histórico de predicciones</h1>
+    <p class="intro">Todas las predicciones hechas desde este navegador, una a una o por lote. Se guardan localmente hasta que las vacíes.</p>
+    <div class="lote-barra">
+      <button class="btn principal" id="btn-export-hist" disabled>Exportar histórico CSV</button>
+      <button class="btn secundario" id="btn-vaciar-hist" disabled>Vaciar histórico</button>
+      <div class="resumen-lote" id="resumen-hist" style="margin:0 0 0 auto">
+        <div><b id="h-total">0</b>predicciones</div>
+        <div><b class="riesgo" id="h-riesgo">0</b>en riesgo</div>
+        <div><b class="estable" id="h-estable">0</b>estables</div>
+      </div>
+    </div>
+    <div class="tabla-wrap" id="tabla-hist-wrap">
+      <table id="tabla-hist"><thead><tr><th>Fecha</th><th>Origen</th><th>Hotel</th><th>Antelación</th><th>Llegada</th><th>Depósito</th><th>Segmento</th><th>Cliente</th><th>ADR</th><th>Probabilidad</th><th>Veredicto</th><th></th></tr></thead><tbody></tbody></table>
+    </div>
+    <p class="aviso-lote" id="hist-vacio">Todavía no hay predicciones guardadas.</p>
+  </div>
+</section>
 
 <script>
-async function predecir() {
-  const val = (id) => document.getElementById(id).value;
-  const num = (id) => Number(document.getElementById(id).value);
+/* ======================= estado y campos ======================= */
+const CAMPOS_NUM = ['lead_time','arrival_date_year','arrival_date_week_number','arrival_date_day_of_month',
+  'stays_in_weekend_nights','stays_in_week_nights','adults','children','babies','is_repeated_guest',
+  'previous_cancellations','previous_bookings_not_canceled','booking_changes','agent','days_in_waiting_list',
+  'adr','required_car_parking_spaces','total_of_special_requests'];
+const CAMPOS_TXT = ['hotel','arrival_date_month','meal','country','market_segment','distribution_channel',
+  'reserved_room_type','assigned_room_type','deposit_type','customer_type'];
+const ORDEN = ['hotel','lead_time','arrival_date_year','arrival_date_month','arrival_date_week_number',
+  'arrival_date_day_of_month','stays_in_weekend_nights','stays_in_week_nights','adults','children','babies',
+  'meal','country','market_segment','distribution_channel','is_repeated_guest','previous_cancellations',
+  'previous_bookings_not_canceled','reserved_room_type','assigned_room_type','booking_changes','deposit_type',
+  'agent','days_in_waiting_list','customer_type','adr','required_car_parking_spaces','total_of_special_requests'];
 
-  const reserva = {
-    hotel: val('hotel'), lead_time: num('lead_time'),
-    arrival_date_year: num('arrival_date_year'), arrival_date_month: val('arrival_date_month'),
-    arrival_date_week_number: num('arrival_date_week_number'), arrival_date_day_of_month: num('arrival_date_day_of_month'),
-    stays_in_weekend_nights: num('stays_in_weekend_nights'), stays_in_week_nights: num('stays_in_week_nights'),
-    adults: num('adults'), children: num('children'), babies: num('babies'),
-    meal: val('meal'), country: val('country'),
-    market_segment: val('market_segment'), distribution_channel: val('distribution_channel'),
-    is_repeated_guest: num('is_repeated_guest'),
-    previous_cancellations: num('previous_cancellations'), previous_bookings_not_canceled: num('previous_bookings_not_canceled'),
-    reserved_room_type: val('reserved_room_type'), assigned_room_type: val('assigned_room_type'),
-    booking_changes: num('booking_changes'), deposit_type: val('deposit_type'),
-    agent: num('agent'), days_in_waiting_list: num('days_in_waiting_list'),
-    customer_type: val('customer_type'), adr: num('adr'),
-    required_car_parking_spaces: num('required_car_parking_spaces'),
-    total_of_special_requests: num('total_of_special_requests'),
-  };
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 
+/* estado de los grupos de opciones (pills) y contadores */
+const seleccion = {};
+$$('.opciones').forEach(g => {
+  const campo = g.dataset.campo;
+  const activo = $('[aria-pressed="true"]', g) || g.firstElementChild;
+  activo.setAttribute('aria-pressed','true');
+  seleccion[campo] = activo.dataset.valor;
+  g.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    $$('button', g).forEach(x => x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true');
+    seleccion[campo] = b.dataset.valor;
+    cambio();
+  });
+});
+const contadores = {};
+$$('.contador').forEach(c => {
+  const campo = c.dataset.campo, num = $('b', c);
+  contadores[campo] = Number(num.textContent);
+  c.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const v = Math.min(Number(c.dataset.max), Math.max(Number(c.dataset.min), contadores[campo] + Number(b.dataset.d)));
+    contadores[campo] = v; num.textContent = v; cambio();
+  });
+});
+/* sliders con relleno */
+$$('input[type=range]').forEach(r => {
+  const out = $(`output[for="${r.id}"] span`);
+  const pinta = () => { out.textContent = r.value; r.style.setProperty('--p', (100 * (r.value - r.min) / (r.max - r.min)) + '%'); };
+  r.addEventListener('input', () => { pinta(); cambio(); });
+  pinta();
+});
+$$('.campo input, .campo select').forEach(el => el.addEventListener('input', cambio));
+
+function leerReserva() {
+  const r = {};
+  ORDEN.forEach(k => {
+    let v;
+    if (k in seleccion) v = seleccion[k];
+    else if (k in contadores) v = contadores[k];
+    else v = document.getElementById(k).value;
+    r[k] = CAMPOS_NUM.includes(k) ? Number(v) : String(v);
+  });
+  r.country = r.country.toUpperCase();
+  return r;
+}
+function cargarReserva(r) {
+  Object.entries(r).forEach(([k, v]) => {
+    if (k in seleccion) {
+      const g = $(`.opciones[data-campo="${k}"]`);
+      $$('button', g).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.valor == v)));
+      seleccion[k] = String(v);
+    } else if (k in contadores) {
+      contadores[k] = Number(v); $(`.contador[data-campo="${k}"] b`).textContent = v;
+    } else {
+      const el = document.getElementById(k); if (!el) return;
+      el.value = v; if (el.type === 'range') el.dispatchEvent(new Event('input'));
+    }
+  });
+}
+
+/* ======================= predicción individual ======================= */
+let temporizador;
+function cambio() {
+  pintarSenales(leerReserva());
+  if (!$('#vivo').checked) return;
+  clearTimeout(temporizador);
+  temporizador = setTimeout(() => predecir(true), 450);
+}
+$('#vivo').addEventListener('change', () => { if ($('#vivo').checked) predecir(true); });
+$('#btn-predecir').addEventListener('click', () => predecir(false));
+$('#btn-reset').addEventListener('click', () => location.reload());
+
+async function llamarApi(reserva) {
+  const res = await fetch('/predict', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(reserva) });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+async function predecir(silencioso) {
+  const reserva = leerReserva();
+  const estado = $('#estado');
+  estado.textContent = 'Consultando el modelo…'; estado.classList.remove('error');
   let data;
-  try {
-    const res = await fetch('/predict', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(reserva)
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    data = await res.json();
-  } catch (err) {
-    alert('Error al llamar a /predict: ' + err.message);
+  try { data = await llamarApi(reserva); }
+  catch (err) {
+    estado.textContent = 'No se pudo consultar /predict (' + err.message + '). Comprueba que la API está levantada.';
+    estado.classList.add('error');
     return;
   }
-
+  estado.textContent = '';
   const cancela = data.prediccion === 1;
-  const prob = cancela ? data.probabilidad_cancelacion : data.probabilidad_no_cancelacion;
-  const pct = (prob * 100).toFixed(1);
-
-  document.getElementById('placeholder').style.display = 'none';
-  const tarjeta = document.getElementById('tarjeta');
-  tarjeta.classList.add('visible');
-  tarjeta.classList.toggle('riesgo', cancela);
-
-  const titulo = document.getElementById('veredicto-titulo');
-  titulo.textContent = data.etiqueta;
-  titulo.className = 'veredicto-titulo ' + (cancela ? 'riesgo' : 'estable');
-
-  document.getElementById('anillo-num').textContent = pct + '%';
-  const circ = 264;
-  document.getElementById('anillo-progreso').setAttribute('stroke-dashoffset', circ - (circ * prob));
-  document.getElementById('anillo-progreso').setAttribute('stroke', cancela ? '#b23b3b' : '#3a6b52');
-
-  document.getElementById('recomendacion').textContent = cancela
-    ? 'Perfil de riesgo: conviene priorizar el contacto de confirmación o aplicar política de overbooking.'
-    : 'Perfil estable: no requiere seguimiento adicional.';
-
-  const fila = document.createElement('tr');
-  fila.innerHTML = `
-    <td>${new Date().toLocaleTimeString()}</td>
-    <td>${reserva.hotel} · ${reserva.customer_type}</td>
-    <td><span class="chip ${cancela ? 'riesgo' : 'estable'}">${cancela ? 'Riesgo' : 'Estable'}</span></td>
-    <td>${pct}%</td>`;
-  document.getElementById('historial').prepend(fila);
+  const prob = Number(data.probabilidad_cancelacion);
+  pintarDial(prob, cancela);
+  $('#titulo').textContent = data.etiqueta || (cancela ? 'Riesgo de cancelación' : 'Reserva estable');
+  $('#titulo').className = 'titulo ' + (cancela ? 'riesgo' : 'estable');
+  $('#sub').textContent = `El modelo estima un ${(prob*100).toFixed(1)}% de probabilidad de cancelación.`;
+  const rec = $('#recomendacion');
+  rec.className = 'recomendacion ' + (cancela ? 'riesgo' : 'estable');
+  rec.textContent = cancela
+    ? 'Conviene priorizar el contacto de confirmación con el huésped o contar con esta reserva en la política de overbooking.'
+    : 'No requiere seguimiento adicional. Puedes contar con ella para la planificación de ocupación.';
+  anotarHistorial(reserva, data, prob, cancela);
 }
+
+function pintarDial(prob, cancela) {
+  const color = cancela ? '#c8623f' : '#5f9f7f';
+  const arco = $('#arco');
+  arco.setAttribute('stroke-dashoffset', 283 - 283 * prob);
+  arco.style.stroke = color;
+  $('#aguja').style.transform = `rotate(${-90 + 180 * prob}deg)`;
+  contarHasta($('#cifra'), prob * 100);
+}
+function contarHasta(el, objetivo) {
+  const inicio = parseFloat(el.dataset.v || 0), t0 = performance.now(), dur = 700;
+  const reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const paso = t => {
+    const k = reducido ? 1 : Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    const v = inicio + (objetivo - inicio) * e;
+    el.innerHTML = v.toFixed(1) + '<small>%</small>';
+    if (k < 1) requestAnimationFrame(paso); else el.dataset.v = objetivo;
+  };
+  requestAnimationFrame(paso);
+}
+
+/* señales orientativas del perfil (no salen del modelo: son patrones conocidos del dataset) */
+function pintarSenales(r) {
+  const s = [];
+  if (r.deposit_type === 'Non Refund') s.push(['sube','Depósito no reembolsable']);
+  if (r.lead_time > 150) s.push(['sube',`Antelación alta (${r.lead_time} días)`]);
+  if (r.previous_cancellations > 0) s.push(['sube',`${r.previous_cancellations} cancelación${r.previous_cancellations>1?'es':''} previa${r.previous_cancellations>1?'s':''}`]);
+  if (r.market_segment === 'Groups') s.push(['sube','Reserva de grupo']);
+  if (r.market_segment === 'Online TA' && r.lead_time > 60) s.push(['sube','Agencia online con antelación']);
+  if (r.days_in_waiting_list > 0) s.push(['sube','Pasó por lista de espera']);
+  if (r.is_repeated_guest === 1) s.push(['baja','Huésped repetido']);
+  if (r.previous_bookings_not_canceled > 0) s.push(['baja','Historial de reservas cumplidas']);
+  if (r.total_of_special_requests > 0) s.push(['baja',`${r.total_of_special_requests} petición${r.total_of_special_requests>1?'es':''} especial${r.total_of_special_requests>1?'es':''}`]);
+  if (r.required_car_parking_spaces > 0) s.push(['baja','Solicita parking']);
+  if (r.booking_changes > 0) s.push(['baja','Ha modificado la reserva']);
+  if (r.reserved_room_type !== r.assigned_room_type) s.push(['baja','Cambio de tipo de habitación']);
+  if (r.market_segment === 'Direct' || r.market_segment === 'Corporate') s.push(['baja','Canal directo o corporativo']);
+  const ul = $('#senales');
+  ul.innerHTML = s.length ? s.map(([c,t]) => `<li class="${c}">${t}</li>`).join('') : '<li class="vacio">Sin señales destacadas.</li>';
+}
+
+/* ======================= historial (persistente) ======================= */
+const CLAVE_HIST = 'recepcion_historico_v1';
+let historial = [];
+try { historial = JSON.parse(localStorage.getItem(CLAVE_HIST) || '[]'); } catch { historial = []; }
+function guardarHistorial() {
+  if (historial.length > 2000) historial.length = 2000;
+  try { localStorage.setItem(CLAVE_HIST, JSON.stringify(historial)); } catch {}
+  pintarHistorialCorto(); pintarHistorico();
+}
+function anotarHistorial(reserva, data, prob, cancela, origen = 'manual') {
+  historial.unshift({ ts: Date.now(), origen, reserva, prob, cancela, etiqueta: data.etiqueta });
+  guardarHistorial();
+}
+const fmtHora = ts => new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+const fmtFecha = ts => new Date(ts).toLocaleString([], {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+
+function pintarHistorialCorto() {
+  const ul = $('#historial');
+  const ultimos = historial.filter(h => h.origen === 'manual').slice(0, 5);
+  if (!ultimos.length) { ul.innerHTML = '<li class="vacio" style="background:none;cursor:default">Aquí verás las últimas cinco. Pulsa una para recuperar sus datos.</li>'; return; }
+  ul.innerHTML = ultimos.map(h => `
+    <li class="${h.cancela ? 'riesgo' : 'estable'}" data-ts="${h.ts}" title="Recuperar esta reserva">
+      <time>${fmtHora(h.ts)}</time>
+      <div><div style="margin-bottom:4px">${h.reserva.hotel} · ${h.reserva.lead_time} d · ${h.reserva.deposit_type}</div><div class="barra" style="--w:${(h.prob*100).toFixed(0)}%"><i></i></div></div>
+      <b>${(h.prob*100).toFixed(1)}%</b>
+    </li>`).join('');
+}
+function pintarHistorico() {
+  const tb = $('#tabla-hist tbody');
+  const riesgo = historial.filter(h => h.cancela).length;
+  $('#h-total').textContent = historial.length; $('#h-riesgo').textContent = riesgo; $('#h-estable').textContent = historial.length - riesgo;
+  $('#btn-export-hist').disabled = $('#btn-vaciar-hist').disabled = !historial.length;
+  $('#tabla-hist-wrap').hidden = !historial.length; $('#hist-vacio').hidden = !!historial.length;
+  tb.innerHTML = historial.map(h => `<tr>
+    <td>${fmtFecha(h.ts)}</td><td>${h.origen === 'lote' ? 'Lote' : 'Manual'}</td>
+    <td>${h.reserva.hotel}</td><td>${h.reserva.lead_time} d</td><td>${h.reserva.arrival_date_day_of_month} ${h.reserva.arrival_date_month} ${h.reserva.arrival_date_year}</td>
+    <td>${h.reserva.deposit_type}</td><td>${h.reserva.market_segment}</td><td>${h.reserva.customer_type}</td><td>${h.reserva.adr}</td>
+    <td>${(h.prob*100).toFixed(1)}%</td><td><span class="chip ${h.cancela ? 'riesgo' : 'estable'}">${h.cancela ? 'Riesgo' : 'Estable'}</span></td>
+    <td><button class="btn secundario" style="padding:4px 10px;font-size:.75rem;color:var(--tinta);border-color:var(--linea)" data-ts="${h.ts}">Abrir</button></td>
+  </tr>`).join('');
+}
+function recuperar(ts) {
+  const h = historial.find(x => x.ts === Number(ts)); if (!h) return;
+  cargarReserva(h.reserva); mostrarVista('reserva'); cambio();
+}
+$('#historial').addEventListener('click', e => { const li = e.target.closest('li[data-ts]'); if (li) recuperar(li.dataset.ts); });
+$('#tabla-hist').addEventListener('click', e => { const b = e.target.closest('button[data-ts]'); if (b) recuperar(b.dataset.ts); });
+$('#btn-ver-hist').addEventListener('click', () => mostrarVista('historico'));
+$('#btn-vaciar-hist').addEventListener('click', () => { if (confirm('¿Vaciar todo el histórico guardado en este navegador?')) { historial = []; guardarHistorial(); } });
+$('#btn-export-hist').addEventListener('click', () => {
+  const filas = historial.map(h => ({ fecha: new Date(h.ts).toISOString(), origen: h.origen, ...h.reserva, probabilidad_cancelacion: h.prob.toFixed(4), prediccion: h.cancela ? 1 : 0, etiqueta: h.etiqueta }));
+  descargarCsv(aCsv(filas), 'historico_predicciones.csv');
+});
+
+/* ======================= CSV utilidades ======================= */
+function aCsv(filas) {
+  if (!filas.length) return '';
+  const cols = Object.keys(filas[0]);
+  const esc = v => { v = String(v ?? ''); return /[",\n;]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; };
+  return [cols.join(','), ...filas.map(f => cols.map(c => esc(f[c])).join(','))].join('\n');
+}
+function parsearCsv(texto) {
+  texto = texto.replace(/^\uFEFF/, '');
+  const sep = (texto.split('\n')[0].match(/;/g) || []).length > (texto.split('\n')[0].match(/,/g) || []).length ? ';' : ',';
+  const filas = []; let fila = [], campo = '', comillas = false;
+  for (let i = 0; i < texto.length; i++) {
+    const c = texto[i];
+    if (comillas) {
+      if (c === '"' && texto[i+1] === '"') { campo += '"'; i++; }
+      else if (c === '"') comillas = false;
+      else campo += c;
+    } else if (c === '"') comillas = true;
+    else if (c === sep) { fila.push(campo); campo = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && texto[i+1] === '\n') i++; fila.push(campo); filas.push(fila); fila = []; campo = ''; }
+    else campo += c;
+  }
+  if (campo !== '' || fila.length) { fila.push(campo); filas.push(fila); }
+  const cab = filas.shift().map(h => h.trim());
+  return filas.filter(f => f.some(x => x.trim() !== '')).map(f => Object.fromEntries(cab.map((h, i) => [h, (f[i] ?? '').trim()])));
+}
+function descargarCsv(csv, nombre) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = nombre; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ======================= vista lote ======================= */
+let lote = [];
+const zona = $('#zona'), fichero = $('#fichero');
+['dragenter','dragover'].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.add('sobre'); }));
+['dragleave','drop'].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.remove('sobre'); }));
+zona.addEventListener('drop', e => { if (e.dataTransfer.files[0]) cargarFichero(e.dataTransfer.files[0]); });
+fichero.addEventListener('change', () => { if (fichero.files[0]) cargarFichero(fichero.files[0]); });
+
+async function cargarFichero(f) {
+  const texto = await f.text();
+  const base = leerReserva();
+  let filas;
+  try { filas = parsearCsv(texto); } catch { $('#aviso-lote').textContent = 'No se pudo leer el CSV.'; return; }
+  const desconocidas = Object.keys(filas[0] || {}).filter(c => !ORDEN.includes(c));
+  lote = filas.map(fila => {
+    const r = { ...base };
+    ORDEN.forEach(k => { if (fila[k] !== undefined && fila[k] !== '') r[k] = CAMPOS_NUM.includes(k) ? Number(fila[k]) : fila[k]; });
+    return { reserva: r, extra: Object.fromEntries(desconocidas.map(c => [c, fila[c]])), resultado: null };
+  });
+  $('#zona p').textContent = `${f.name} · ${lote.length} reservas`;
+  $('#aviso-lote').textContent = desconocidas.length ? `Columnas ignoradas para el modelo (se conservan en la exportación): ${desconocidas.join(', ')}.` : '';
+  $('#btn-lote').disabled = lote.length === 0;
+  $('#btn-export-lote').disabled = true;
+  $('#resumen-lote').hidden = true;
+  pintarTabla();
+}
+
+function pintarTabla() {
+  const wrap = $('#tabla-wrap'); wrap.hidden = false;
+  const cols = ['hotel','lead_time','arrival_date_month','deposit_type','market_segment','customer_type','adr'];
+  const extras = Object.keys(lote[0]?.extra || {});
+  $('#tabla-lote thead').innerHTML = '<tr>' + [...extras, ...cols, 'Probabilidad', 'Veredicto'].map(c => `<th>${c}</th>`).join('') + '</tr>';
+  $('#tabla-lote tbody').innerHTML = lote.map(l => {
+    const r = l.resultado;
+    const prob = r && !r.error ? (r.prob*100).toFixed(1) + '%' : '—';
+    const chip = !r ? '<span class="chip pendiente">pendiente</span>'
+      : r.error ? `<span class="chip error">${r.error}</span>`
+      : `<span class="chip ${r.cancela ? 'riesgo' : 'estable'}">${r.cancela ? 'Riesgo' : 'Estable'}</span>`;
+    return '<tr>' + extras.map(c => `<td>${l.extra[c] ?? ''}</td>`).join('') + cols.map(c => `<td>${l.reserva[c]}</td>`).join('') + `<td>${prob}</td><td>${chip}</td></tr>`;
+  }).join('');
+}
+
+$('#btn-lote').addEventListener('click', async () => {
+  const btn = $('#btn-lote'); btn.disabled = true; btn.textContent = 'Calculando…';
+  const barra = $('#progreso');
+  const CONCURRENCIA = 4; let idx = 0, hechas = 0;
+  async function trabajador() {
+    while (idx < lote.length) {
+      const i = idx++;
+      try {
+        const d = await llamarApi(lote[i].reserva);
+        lote[i].resultado = { prob: Number(d.probabilidad_cancelacion), cancela: d.prediccion === 1, etiqueta: d.etiqueta };
+        historial.unshift({ ts: Date.now() + i, origen: 'lote', reserva: lote[i].reserva, prob: lote[i].resultado.prob, cancela: lote[i].resultado.cancela, etiqueta: d.etiqueta });
+      } catch (err) { lote[i].resultado = { error: err.message }; }
+      hechas++; barra.style.width = (100 * hechas / lote.length) + '%';
+      if (hechas % 5 === 0 || hechas === lote.length) pintarTabla();
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCIA, lote.length) }, trabajador));
+  btn.textContent = 'Calcular todo el lote'; btn.disabled = false;
+  guardarHistorial();
+  const ok = lote.filter(l => l.resultado && !l.resultado.error);
+  const riesgo = ok.filter(l => l.resultado.cancela).length;
+  $('#r-total').textContent = lote.length; $('#r-riesgo').textContent = riesgo; $('#r-estable').textContent = ok.length - riesgo;
+  $('#r-media').textContent = ok.length ? (100 * ok.reduce((a,l) => a + l.resultado.prob, 0) / ok.length).toFixed(1) + '%' : '—';
+  $('#resumen-lote').hidden = false;
+  $('#btn-export-lote').disabled = ok.length === 0;
+  const errores = lote.length - ok.length;
+  if (errores) $('#aviso-lote').textContent = `${errores} fila${errores>1?'s':''} no se pudo${errores>1?'ieron':''} calcular; revisa sus valores.`;
+});
+
+$('#btn-export-lote').addEventListener('click', () => {
+  const filas = lote.map(l => ({ ...l.extra, ...l.reserva,
+    probabilidad_cancelacion: l.resultado?.prob?.toFixed(4) ?? '', prediccion: l.resultado?.error ? '' : (l.resultado?.cancela ? 1 : 0),
+    etiqueta: l.resultado?.etiqueta ?? l.resultado?.error ?? '' }));
+  descargarCsv(aCsv(filas), 'lote_predicciones.csv');
+});
+$('#btn-plantilla').addEventListener('click', () => {
+  const base = leerReserva();
+  const ejemplo2 = { ...base, hotel:'Resort Hotel', lead_time:20, deposit_type:'Non Refund', market_segment:'Groups', customer_type:'Group', adr:95 };
+  descargarCsv(aCsv([base, ejemplo2]), 'plantilla_reservas.csv');
+});
+
+/* ======================= pestañas ======================= */
+function mostrarVista(nombre) {
+  $$('.tabs button').forEach(x => x.setAttribute('aria-selected', String(x.dataset.vista === nombre)));
+  $$('.vista').forEach(v => v.classList.toggle('activa', v.id === 'vista-' + nombre));
+  window.scrollTo({ top: 0 });
+}
+$$('.tabs button').forEach(b => b.addEventListener('click', () => mostrarVista(b.dataset.vista)));
+
+$('#btn-ayuda').addEventListener('click', () => $('#ayuda').showModal());
+$('#btn-cerrar-ayuda').addEventListener('click', () => $('#ayuda').close());
+$('#ayuda').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+/* arranque */
+pintarHistorialCorto(); pintarHistorico();
+pintarSenales(leerReserva());
+predecir(true);
 </script>
 </body>
 </html>
