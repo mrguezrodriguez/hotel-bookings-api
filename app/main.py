@@ -11,6 +11,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from app.predictor import predecir
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
     title="Hotel Bookings - Prediccion de cancelaciones",
@@ -125,3 +126,6 @@ def info_modelo():
         "pasos_del_pipeline": [nombre for nombre, _ in pipeline.steps],
         "metricas_en_test": {"roc_auc": 0.95},
     }
+
+
+app.mount("/app", StaticFiles(directory="app/static", html=True), name="frontend")
