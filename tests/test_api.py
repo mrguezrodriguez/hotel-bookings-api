@@ -14,8 +14,9 @@ BASE = sys.argv[1].rstrip("/") if len(sys.argv) > 1 else "http://127.0.0.1:8000"
 
 
 def comprobar(nombre, condicion):
-    print(f"[{'OK ' if condicion else 'FALLA'}] {nombre}")
-    return condicion
+    print("\nTODO CORRECTO" if ok else "\nHay comprobaciones que fallan")
+    if not ok:
+        sys.exit(1)
 
 
 def main():
