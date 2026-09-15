@@ -1,0 +1,57 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Construir la imagen
+        run: docker build -t hotel-api .
+
+      - name: Arrancar el contenedor
+        run: docker run -d -p 8000:8000 hotel-api
+
+      - name: Esperar a que la API responda
+        run: |
+          for i in $(seq 1 30); do
+            curl -s http://localhost:8000/health && exit 0
+            sleep 2
+          done
+          exit 1
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Ejecutar tests contra el contenedor
+        run: |
+          pip install requests
+          python tests/test_api.py http://localhost:8000
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Login en Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u mariarguezrodriguez --password-stdin
+
+      - name: Construir y subir la imagen
+        run: |
+          docker build -t mariarguezrodriguez/hotel-api:latest .
+          docker push mariarguezrodriguez/hotel-api:latest
+
+      - name: Redesplegar en Render
+        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
